@@ -134,7 +134,6 @@ function hexToRgb(h){const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h)
 function formatTime(t){const h=Math.floor(t);const m=(t%1)*60;const ap=h>=12?'PM':'AM';const dh=h%12||12;const dm=m===0?'00':'30';return dh+':'+dm+ap;}
 function draw(){state.view==='interior'?drawInterior():drawExterior();}
 document.querySelectorAll('.view-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.view-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.view=b.dataset.view;draw();}));
-document.querySelectorAll('.light
 document.querySelectorAll('.light-switch').forEach(s=>s.addEventListener('click',()=>{const l=s.dataset.light;state.lights[l]=!state.lights[l];s.classList.toggle('on',state.lights[l]);draw();}));
 document.querySelectorAll('#wallColors .color-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#wallColors .color-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');state.wallColor=b.dataset.color;draw();}));
 document.querySelectorAll('#floorColors .color-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#floorColors .color-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');state.floorColor=b.dataset.color;draw();}));
