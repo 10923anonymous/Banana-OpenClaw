@@ -1,980 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=800, initial-scale=1.0">
-    <title>Room Designer 2D</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            width: 800px;
-            height: 480px;
-            overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a2e;
-            color: #fff;
-        }
-
-        .container {
-            width: 800px;
-            height: 480px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Header */
-        .header {
-            height: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-        }
-
-        .header h1 {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .view-toggle {
-            display: flex;
-            gap: 10px;
-        }
-
-        .view-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.2);
-            color: #fff;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-
-        .view-btn.active {
-            background: #fff;
-            color: #667eea;
-        }
-
-        /* Main Content */
-        .main {
-            flex: 1;
-            display: flex;
-        }
-
-        /* Room Display */
-        .room-display {
-            width: 500px;
-            height: 430px;
-            position: relative;
-            background: #2d2d44;
-        }
-
-        .room-canvas {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Controls Panel */
-        .controls {
-            width: 300px;
-            height: 430px;
-            background: #252538;
-            padding: 15px;
-            overflow-y: auto;
-        }
-
-        .control-section {
-            margin-bottom: 20px;
-        }
-
-        .control-section h3 {
-            font-size: 14px;
-            margin-bottom: 10px;
-            color: #a0a0c0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Light Switches */
-        .switch-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .light-switch {
-            background: #3a3a55;
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .light-switch:hover {
-            background: #4a4a6a;
-        }
-
-        .light-switch.on {
-            background: #ffd700;
-            color: #1a1a2e;
-        }
-
-        .switch-icon {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        .switch-label {
-            font-size: 11px;
-        }
-
-        /* Color Pickers */
-        .color-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-        }
-
-        .color-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            border: 3px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .color-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .color-btn.selected {
-            border-color: #fff;
-            box-shadow: 0 0 10px rgba(255,255,255,0.5);
-        }
-
-        /* Furniture Controls */
-        .furniture-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-
-        .furniture-btn {
-            background: #3a3a55;
-            border: none;
-            border-radius: 8px;
-            padding: 10px;
-            color: #fff;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s;
-        }
-
-        .furniture-btn:hover {
-            background: #4a4a6a;
-        }
-
-        .furniture-btn.active {
-            background: #667eea;
-        }
-
-        /* Time Slider */
-        .time-slider {
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .time-slider input {
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: #3a3a55;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        .time-slider input::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #667eea;
-            cursor: pointer;
-        }
-
-        .time-label {
-            text-align: center;
-            margin-top: 5px;
-            font-size: 12px;
-            color: #a0a0c0;
-        }
-
-        /* Action Buttons */
-        .action-btns {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .action-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background: #667eea;
-            color: #fff;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-
-        .action-btn:hover {
-            background: #764ba2;
-        }
-
-        .action-btn.secondary {
-            background: #3a3a55;
-        }
-
-        /* Tooltip */
-        .tooltip {
-            position: fixed;
-            background: rgba(0,0,0,0.8);
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 1000;
-        }
-
-        .tooltip.show {
-            opacity: 1;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Neon Room Designer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:800px;height:480px;overflow:hidden;font-family:Arial;background:#050508;color:#fff}
+.container{width:800px;height:480px;display:flex;flex-direction:column}
+.header{height:50px;background:linear-gradient(90deg,#0a0a1a,#1a0a2e);border-bottom:2px solid #00d4ff;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.header h1{font-size:16px;text-transform:uppercase;letter-spacing:2px;color:#00d4ff;text-shadow:0 0 10px #00d4ff}
+.view-toggle{display:flex;gap:10px}
+.view-btn{padding:8px 16px;border:1px solid #00d4ff;background:rgba(0,212,255,0.1);color:#00d4ff;cursor:pointer;font-size:10px;text-transform:uppercase}
+.view-btn.active{background:#00d4ff;color:#000}
+.main{flex:1;display:flex}
+.room-display{width:500px;height:430px;background:#08080c}
+.room-canvas{width:100%;height:100%}
+.controls{width:300px;height:430px;background:#0a0a12;padding:12px;overflow-y:auto}
+.control-section{margin-bottom:15px;padding:12px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.2);border-radius:4px}
+.control-section h3{font-size:11px;margin-bottom:10px;color:#00d4ff;text-transform:uppercase;letter-spacing:1px}
+.switch-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.light-switch{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.3);border-radius:4px;padding:10px;text-align:center;cursor:pointer;font-size:9px}
+.light-switch.on{background:rgba(0,212,255,0.3);border-color:#00d4ff;box-shadow:0 0 10px rgba(0,212,255,0.4)}
+.switch-icon{font-size:18px;margin-bottom:4px}
+.color-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.color-btn{width:45px;height:45px;border-radius:4px;border:2px solid rgba(255,255,255,0.1);cursor:pointer}
+.color-btn.selected{border-color:#00d4ff;box-shadow:0 0 15px #00d4ff}
+.furniture-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.furniture-btn{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.3);border-radius:4px;padding:8px;color:#88aacc;cursor:pointer;font-size:9px;text-transform:uppercase}
+.furniture-btn.active{background:rgba(0,212,255,0.3);border-color:#00d4ff;color:#00d4ff}
+.time-slider{margin-top:8px}
+.time-slider input{width:100%;height:6px;background:linear-gradient(90deg,#1a1a3a,#00d4ff,#ff00ff,#1a1a3a)}
+.time-label{text-align:center;margin-top:6px;font-size:11px;color:#00d4ff}
+.action-btns{display:flex;gap:8px;margin-top:12px}
+.action-btn{flex:1;padding:10px;border:none;border-radius:4px;background:#00d4ff;color:#000;cursor:pointer;font-size:10px;text-transform:uppercase;font-weight:bold}
+.action-btn.secondary{background:transparent;border:1px solid #00d4ff;color:#00d4ff}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🏠 Room Designer 2D</h1>
-            <div class="view-toggle">
-                <button class="view-btn active" data-view="interior">Interior</button>
-                <button class="view-btn" data-view="exterior">Exterior</button>
-            </div>
-        </div>
-        
-        <div class="main">
-            <div class="room-display">
-                <canvas id="roomCanvas" class="room-canvas"></canvas>
-            </div>
-            
-            <div class="controls">
-                <!-- Light Switches -->
-                <div class="control-section">
-                    <h3>💡 Light Switches</h3>
-                    <div class="switch-grid">
-                        <div class="light-switch" data-light="main">
-                            <div class="switch-icon">💡</div>
-                            <div class="switch-label">Main</div>
-                        </div>
-                        <div class="light-switch" data-light="bedside">
-                            <div class="switch-icon">🛏️</div>
-                            <div class="switch-label">Bedside</div>
-                        </div>
-                        <div class="light-switch" data-light="desk">
-                            <div class="switch-icon">🖥️</div>
-                            <div class="switch-label">Desk</div>
-                        </div>
-                        <div class="light-switch" data-light="ambient">
-                            <div class="switch-icon">✨</div>
-                            <div class="switch-label">Ambient</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Wall Color -->
-                <div class="control-section">
-                    <h3>🎨 Wall Color</h3>
-                    <div class="color-grid" id="wallColors">
-                        <div class="color-btn selected" style="background: #f5f5f5" data-color="#f5f5f5"></div>
-                        <div class="color-btn" style="background: #e8d5b7" data-color="#e8d5b7"></div>
-                        <div class="color-btn" style="background: #b8c5d6" data-color="#b8c5d6"></div>
-                        <div class="color-btn" style="background: #d4a5a5" data-color="#d4a5a5"></div>
-                        <div class="color-btn" style="background: #a8d8b9" data-color="#a8d8b9"></div>
-                        <div class="color-btn" style="background: #f4d03f" data-color="#f4d03f"></div>
-                        <div class="color-btn" style="background: #2c3e50" data-color="#2c3e50"></div>
-                        <div class="color-btn" style="background: #8e44ad" data-color="#8e44ad"></div>
-                    </div>
-                </div>
-
-                <!-- Floor Color -->
-                <div class="control-section">
-                    <h3>🪵 Floor Color</h3>
-                    <div class="color-grid" id="floorColors">
-                        <div class="color-btn selected" style="background: #8b7355" data-color="#8b7355"></div>
-                        <div class="color-btn" style="background: #a0522d" data-color="#a0522d"></div>
-                        <div class="color-btn" style="background: #cd853f" data-color="#cd853f"></div>
-                        <div class="color-btn" style="background: #d2b48c" data-color="#d2b48c"></div>
-                        <div class="color-btn" style="background: #696969" data-color="#696969"></div>
-                        <div class="color-btn" style="background: #2f4f4f" data-color="#2f4f4f"></div>
-                        <div class="color-btn" style="background: #fff" data-color="#fff"></div>
-                        <div class="color-btn" style="background: #1a1a1a" data-color="#1a1a1a"></div>
-                    </div>
-                </div>
-
-                <!-- Furniture -->
-                <div class="control-section">
-                    <h3>🪑 Furniture</h3>
-                    <div class="furniture-grid">
-                        <button class="furniture-btn active" data-furniture="bed">Bed</button>
-                        <button class="furniture-btn active" data-furniture="desk">Desk</button>
-                        <button class="furniture-btn active" data-furniture="chair">Chair</button>
-                        <button class="furniture-btn" data-furniture="plant">Plant</button>
-                        <button class="furniture-btn" data-furniture="lamp">Lamp</button>
-                        <button class="furniture-btn" data-furniture="rug">Rug</button>
-                    </div>
-                </div>
-
-                <!-- Time of Day -->
-                <div class="control-section">
-                    <h3>🌅 Time of Day</h3>
-                    <div class="time-slider">
-                        <input type="range" id="timeSlider" min="0" max="24" value="12" step="0.5">
-                        <div class="time-label" id="timeLabel">12:00 PM</div>
-                    </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="action-btns">
-                    <button class="action-btn secondary" id="resetBtn">Reset</button>
-                    <button class="action-btn" id="saveBtn">Save</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="tooltip" id="tooltip"></div>
-
-    <script>
-        // Canvas setup
-        const canvas = document.getElementById('roomCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 500;
-        canvas.height = 430;
-
-        // State
-        const state = {
-            view: 'interior',
-            lights: {
-                main: false,
-                bedside: false,
-                desk: false,
-                ambient: false
-            },
-            wallColor: '#f5f5f5',
-            floorColor: '#8b7355',
-            furniture: {
-                bed: true,
-                desk: true,
-                chair: true,
-                plant: false,
-                lamp: false,
-                rug: false
-            },
-            time: 12
-        };
-
-        // Draw functions
-        function drawInterior() {
-            // Clear canvas
-            ctx.fillStyle = '#2d2d44';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Calculate lighting based on time
-            const timeBrightness = getTimeBrightness();
-            const lightIntensity = calculateLightIntensity(timeBrightness);
-
-            // Draw room background (walls)
-            const wallGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            const baseWall = hexToRgb(state.wallColor);
-            wallGradient.addColorStop(0, `rgb(${baseWall.r * lightIntensity}, ${baseWall.g * lightIntensity}, ${baseWall.b * lightIntensity})`);
-            wallGradient.addColorStop(1, `rgb(${baseWall.r * lightIntensity * 0.7}, ${baseWall.g * lightIntensity * 0.7}, ${baseWall.b * lightIntensity * 0.7})`);
-            
-            ctx.fillStyle = wallGradient;
-            ctx.fillRect(50, 50, 400, 300);
-
-            // Draw floor
-            const floorGradient = ctx.createLinearGradient(0, 350, 0, 430);
-            const baseFloor = hexToRgb(state.floorColor);
-            floorGradient.addColorStop(0, `rgb(${baseFloor.r * lightIntensity}, ${baseFloor.g * lightIntensity}, ${baseFloor.b * lightIntensity})`);
-            floorGradient.addColorStop(1, `rgb(${baseFloor.r * lightIntensity * 0.6}, ${baseFloor.g * lightIntensity * 0.6}, ${baseFloor.b * lightIntensity * 0.6})`);
-            
-            ctx.fillStyle = floorGradient;
-            ctx.fillRect(50, 350, 400, 80);
-
-            // Draw floor boards
-            ctx.strokeStyle = `rgba(0,0,0,${0.2 * lightIntensity})`;
-            ctx.lineWidth = 1;
-            for (let i = 0; i < 8; i++) {
-                ctx.beginPath();
-                ctx.moveTo(50 + i * 50, 350);
-                ctx.lineTo(30 + i * 45, 430);
-                ctx.stroke();
-            }
-
-            // Draw window
-            drawWindow(150, 80, 200, 120, timeBrightness);
-
-            // Draw door
-            drawDoor(380, 150, 60, 200);
-
-            // Draw furniture
-            if (state.furniture.bed) drawBed(280, 200, lightIntensity);
-            if (state.furniture.desk) drawDesk(80, 220, lightIntensity);
-            if (state.furniture.chair) drawChair(140, 240, lightIntensity);
-            if (state.furniture.plant) drawPlant(60, 320, lightIntensity);
-            if (state.furniture.lamp) drawLamp(320, 180, lightIntensity);
-            if (state.furniture.rug) drawRug(200, 320, lightIntensity);
-
-            // Draw light effects
-            drawLightEffects(lightIntensity);
-
-            // Draw shadows
-            drawShadows(lightIntensity);
-        }
-
-        function drawExterior() {
-            // Clear canvas
-            ctx.fillStyle = '#2d2d44';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const timeBrightness = getTimeBrightness();
-
-            // Draw sky
-            const skyGradient = ctx.createLinearGradient(0, 0, 0, 300);
-            if (state.time >= 6 && state.time < 18) {
-                // Day
-                skyGradient.addColorStop(0, '#87CEEB');
-                skyGradient.addColorStop(1, '#E0F6FF');
-            } else if (state.time >= 18 && state.time < 20) {
-                // Sunset
-                skyGradient.addColorStop(0, '#FF6B6B');
-                skyGradient.addColorStop(0.5, '#FFE66D');
-                skyGradient.addColorStop(1, '#4ECDC4');
-            } else {
-                // Night
-                skyGradient.addColorStop(0, '#1a1a2e');
-                skyGradient.addColorStop(1, '#16213e');
-            }
-            
-            ctx.fillStyle = skyGradient;
-            ctx.fillRect(0, 0, canvas.width, 300);
-
-            // Draw sun/moon
-            if (state.time >= 6 && state.time < 18) {
-                drawSun(400, 80, 30);
-            } else {
-                drawMoon(400, 80, 25);
-            }
-
-            // Draw ground
-            ctx.fillStyle = '#3a5a40';
-            ctx.fillRect(0, 300, canvas.width, 130);
-
-            // Draw house exterior
-            drawHouseExterior(150, 180, 200, 150, timeBrightness);
-
-            // Draw trees
-            drawTree(50, 250, timeBrightness);
-            drawTree(420, 230, timeBrightness);
-
-            // Draw path
-            ctx.fillStyle = '#8b7355';
-            ctx.beginPath();
-            ctx.moveTo(220, 330);
-            ctx.lineTo(280, 330);
-            ctx.lineTo(300, 430);
-            ctx.lineTo(200, 430);
-            ctx.closePath();
-            ctx.fill();
-
-            // Draw exterior lights
-            if (state.lights.main || state.lights.ambient) {
-                ctx.fillStyle = 'rgba(255, 215, 0, 0.6)';
-                ctx.beginPath();
-                ctx.arc(250, 260, 40, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        function drawWindow(x, y, w, h, brightness) {
-            // Window frame
-            ctx.fillStyle = '#4a4a4a';
-            ctx.fillRect(x - 5, y - 5, w + 10, h + 10);
-
-            // Glass
-            const glassGradient = ctx.createLinearGradient(x, y, x, y + h);
-            if (state.time >= 6 && state.time < 18) {
-                glassGradient.addColorStop(0, `rgba(135, 206, 235, ${0.3 + brightness * 0.4})`);
-                glassGradient.addColorStop(1, `rgba(224, 246, 255, ${0.3 + brightness * 0.4})`);
-            } else {
-                glassGradient.addColorStop(0, `rgba(25, 25, 50, ${0.5 + brightness * 0.3})`);
-                glassGradient.addColorStop(1, `rgba(50, 50, 80, ${0.5 + brightness * 0.3})`);
-            }
-            
-            ctx.fillStyle = glassGradient;
-            ctx.fillRect(x, y, w, h);
-
-            // Window panes
-            ctx.strokeStyle = '#4a4a4a';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(x + w/2, y);
-            ctx.lineTo(x + w/2, y + h);
-            ctx.moveTo(x, y + h/2);
-            ctx.lineTo(x + w, y + h/2);
-            ctx.stroke();
-
-            // Reflection
-            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(x + 10, y + h - 10);
-            ctx.lineTo(x + w/2 - 10, y + h/2 + 10);
-            ctx.stroke();
-        }
-
-        function drawDoor(x, y, w, h) {
-            // Door frame
-            ctx.fillStyle = '#3a3a3a';
-            ctx.fillRect(x - 3, y - 3, w + 6, h + 6);
-
-            // Door
-            ctx.fillStyle = '#8b4513';
-            ctx.fillRect(x, y, w, h);
-
-            // Door panels
-            ctx.strokeStyle = '#5a2d0c';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x + 10, y + 10, w - 20, h/2 - 15);
-            ctx.strokeRect(x + 10, y + h/2 + 5, w - 20, h/2 - 15);
-
-            // Handle
-            ctx.fillStyle = '#ffd700';
-            ctx.beginPath();
-            ctx.arc(x + w - 12, y + h/2, 4, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function drawBed(x, y, intensity) {
-            // Bed frame
-            ctx.fillStyle = `rgb(${100 * intensity}, ${80 * intensity}, ${60 * intensity})`;
-            ctx.fillRect(x, y, 120, 140);
-
-            // Mattress
-            ctx.fillStyle = `rgb(${240 * intensity}, ${240 * intensity}, ${240 * intensity})`;
-            ctx.fillRect(x + 5, y + 30, 110, 105);
-
-            // Pillow
-            ctx.fillStyle = `rgb(${255 * intensity}, ${255 * intensity}, ${255 * intensity})`;
-            ctx.fillRect(x + 15, y + 35, 90, 25);
-
-            // Blanket
-            ctx.fillStyle = `rgb(${100 * intensity}, ${150 * intensity}, ${200 * intensity})`;
-            ctx.fillRect(x + 5, y + 65, 110, 70);
-
-            // Blanket pattern
-            ctx.strokeStyle = `rgba(255,255,255,${0.3 * intensity})`;
-            ctx.lineWidth = 2;
-            for (let i = 0; i < 3; i++) {
-                ctx.beginPath();
-                ctx.moveTo(x + 5, y + 80 + i * 20);
-                ctx.lineTo(x + 115, y + 80 + i * 20);
-                ctx.stroke();
-            }
-        }
-
-        function drawDesk(x, y, intensity) {
-            // Desk top
-            ctx.fillStyle = `rgb(${120 * intensity}, ${100 * intensity}, ${80 * intensity})`;
-            ctx.fillRect(x, y, 100, 15);
-
-            // Desk legs
-            ctx.fillStyle = `rgb(${80 * intensity}, ${60 * intensity}, ${40 * intensity})`;
-            ctx.fillRect(x + 5, y + 15, 8, 80);
-            ctx.fillRect(x + 87, y + 15, 8, 80);
-
-            // Computer monitor
-            ctx.fillStyle = `rgb(${50 * intensity}, ${50 * intensity}, ${50 * intensity})`;
-            ctx.fillRect(x + 30, y - 25, 40, 30);
-            ctx.fillRect(x + 45, y - 5, 10, 5);
-
-            // Screen
-            const screenOn = state.lights.desk;
-            ctx.fillStyle = screenOn ? `rgb(${100 * intensity}, ${150 * intensity}, ${255 * intensity})` : `rgb(${20 * intensity}, ${20 * intensity}, ${20 * intensity})`;
-            ctx.fillRect(x + 33, y - 22, 34, 24);
-        }
-
-        function drawChair(x, y, intensity) {
-            // Seat
-            ctx.fillStyle = `rgb(${150 * intensity}, ${50 * intensity}, ${50 * intensity})`;
-            ctx.fillRect(x, y, 40, 10);
-
-            // Back
-            ctx.fillRect(x + 30, y - 40, 10, 50);
-
-            // Legs
-            ctx.fillStyle = `rgb(${80 * intensity}, ${80 * intensity}, ${80 * intensity})`;
-            ctx.fillRect(x + 5, y + 10, 5, 30);
-            ctx.fillRect(x + 30, y + 10, 5, 30);
-        }
-
-        function drawPlant(x, y, intensity) {
-            // Pot
-            ctx.fillStyle = `rgb(${200 * intensity}, ${100 * intensity}, ${50 * intensity})`;
-            ctx.fillRect(x, y, 30, 25);
-
-            // Leaves
-            ctx.fillStyle = `rgb(${50 * intensity}, ${150 * intensity}, ${50 * intensity})`;
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.ellipse(x + 15 + Math.cos(i * 1.2) * 15, y - 10 + Math.sin(i * 1.2) * 10, 12, 20, i * 0.5, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        function drawLamp(x, y, intensity) {
-            // Base
-            ctx.fillStyle = `rgb(${60 * intensity}, ${60 * intensity}, ${60 * intensity})`;
-            ctx.fillRect(x, y + 40, 20, 5);
-
-            // Stand
-            ctx.fillRect(x + 8, y + 10, 4, 30);
-
-            // Shade
-            ctx.fillStyle = `rgb(${255 * intensity}, ${200 * intensity}, ${150 * intensity})`;
-            ctx.beginPath();
-            ctx.moveTo(x - 5, y + 10);
-            ctx.lineTo(x + 25, y + 10);
-            ctx.lineTo(x + 20, y - 10);
-            ctx.lineTo(x, y - 10);
-            ctx.closePath();
-            ctx.fill();
-
-            // Light glow
-            if (state.lights.bedside) {
-                ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
-                ctx.beginPath();
-                ctx.arc(x + 10, y + 20, 60, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        function drawRug(x, y, intensity) {
-            ctx.fillStyle = `rgb(${150 * intensity}, ${100 * intensity}, ${100 * intensity})`;
-            ctx.fillRect(x, y, 100, 60);
-
-            // Pattern
-            ctx.strokeStyle = `rgba(255,255,255,${0.4 * intensity})`;
-            ctx.lineWidth = 3;
-            ctx.strokeRect(x + 10, y + 10, 80, 40);
-            ctx.strokeRect(x + 20, y + 20, 60, 20);
-        }
-
-        function drawHouseExterior(x, y, w, h, brightness) {
-            // House body
-            ctx.fillStyle = state.wallColor;
-            ctx.fillRect(x, y, w, h);
-
-            // Roof
-            ctx.fillStyle = '#4a4a4a';
-            ctx.beginPath();
-            ctx.moveTo(x - 20, y);
-            ctx.lineTo(x + w/2, y - 60);
-            ctx.lineTo(x + w + 20, y);
-            ctx.closePath();
-            ctx.fill();
-
-            // Door
-            ctx.fillStyle = '#8b4513';
-            ctx.fillRect(x + w/2 - 20, y + h - 50, 40, 50);
-
-            // Windows
-            ctx.fillStyle = state.time >= 6 && state.time < 18 ? '#87CEEB' : '#1a1a2e';
-            ctx.fillRect(x + 30, y + 40, 40, 40);
-            ctx.fillRect(x + w - 70, y + 40, 40, 40);
-
-            // Window frames
-            ctx.strokeStyle = '#4a4a4a';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(x + 30, y + 40, 40, 40);
-            ctx.strokeRect(x + w - 70, y + 40, 40, 40);
-
-            // Chimney
-            ctx.fillStyle = '#8b4513';
-            ctx.fillRect(x + w - 40, y - 40, 25, 40);
-
-            // Smoke
-            if (state.time >= 18 || state.time < 8) {
-                ctx.fillStyle = 'rgba(200, 200, 200, 0.4)';
-                for (let i = 0; i < 3; i++) {
-                    ctx.beginPath();
-                    ctx.arc(x + w - 27 + i * 10, y - 50 - i * 15, 10 + i * 3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-        }
-
-        function drawTree(x, y, brightness) {
-            // Trunk
-            ctx.fillStyle = '#5a4a3a';
-            ctx.fillRect(x - 10, y, 20, 60);
-
-            // Leaves
-            ctx.fillStyle = `rgb(${50 * brightness}, ${120 * brightness}, ${50 * brightness})`;
-            ctx.beginPath();
-            ctx.arc(x, y - 20, 40, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x - 25, y, 30, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x + 25, y, 30, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function drawSun(x, y, r) {
-            ctx.fillStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Rays
-            ctx.strokeStyle = '#FFD700';
-            ctx.lineWidth = 3;
-            for (let i = 0; i < 8; i++) {
-                const angle = (i * Math.PI) / 4;
-                ctx.beginPath();
-                ctx.moveTo(x + Math.cos(angle) * (r + 5), y + Math.sin(angle) * (r + 5));
-                ctx.lineTo(x + Math.cos(angle) * (r + 20), y + Math.sin(angle) * (r + 20));
-                ctx.stroke();
-            }
-        }
-
-        function drawMoon(x, y, r) {
-            ctx.fillStyle = '#F0E6FF';
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Craters
-            ctx.fillStyle = '#D0C0E0';
-            ctx.beginPath();
-            ctx.arc(x - 5, y - 3, 5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x + 6, y + 5, 4, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function drawLightEffects(intensity) {
-            // Main light
-            if (state.lights.main) {
-                ctx.fillStyle = 'rgba(255, 255, 200, 0.2)';
-                ctx.beginPath();
-                ctx.arc(250, 100, 150, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Desk light
-            if (state.lights.desk) {
-                ctx.fillStyle = 'rgba(200, 220, 255, 0.15)';
-                ctx.beginPath();
-                ctx.arc(130, 250, 80, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Ambient light
-            if (state.lights.ambient) {
-                ctx.fillStyle = 'rgba(255, 180, 200, 0.1)';
-                ctx.fillRect(50, 50, 400, 300);
-            }
-        }
-
-        function drawShadows(intensity) {
-            const shadowAlpha = 0.3 * (1 - intensity * 0.5);
-            ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
-            
-            // Bed shadow
-            if (state.furniture.bed) {
-                ctx.fillRect(290, 345, 120, 10);
-            }
-            
-            // Desk shadow
-            if (state.furniture.desk) {
-                ctx.fillRect(90, 315, 100, 8);
-            }
-        }
-
-        // Helper functions
-        function getTimeBrightness() {
-            if (state.time >= 6 && state.time < 18) {
-                // Day time
-                const midDay = 12;
-                const distFromMid = Math.abs(state.time - midDay);
-                return 0.7 + (1 - distFromMid / 6) * 0.3;
-            } else if (state.time >= 18 && state.time < 20) {
-                // Sunset
-                return 0.5 - (state.time - 18) * 0.2;
-            } else {
-                // Night
-                return 0.2;
-            }
-        }
-
-        function calculateLightIntensity(naturalBrightness) {
-            let artificialLight = 0;
-            if (state.lights.main) artificialLight += 0.4;
-            if (state.lights.bedside) artificialLight += 0.2;
-            if (state.lights.desk) artificialLight += 0.15;
-            if (state.lights.ambient) artificialLight += 0.1;
-            
-            return Math.min(1, naturalBrightness + artificialLight);
-        }
-
-        function hexToRgb(hex) {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : { r: 255, g: 255, b: 255 };
-        }
-
-        function formatTime(time) {
-            const hours = Math.floor(time);
-            const minutes = (time % 1) * 60;
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            const displayHours = hours % 12 || 12;
-            const displayMinutes = minutes === 0 ? '00' : '30';
-            return `${displayHours}:${displayMinutes} ${ampm}`;
-        }
-
-        // Event listeners
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.view = btn.dataset.view;
-                draw();
-            });
-        });
-
-        document.querySelectorAll('.light-switch').forEach(sw => {
-            sw.addEventListener('click', () => {
-                const light = sw.dataset.light;
-                state.lights[light] = !state.lights[light];
-                sw.classList.toggle('on', state.lights[light]);
-                draw();
-            });
-        });
-
-        document.querySelectorAll('#wallColors .color-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#wallColors .color-btn').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                state.wallColor = btn.dataset.color;
-                draw();
-            });
-        });
-
-        document.querySelectorAll('#floorColors .color-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#floorColors .color-btn').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                state.floorColor = btn.dataset.color;
-                draw();
-            });
-        });
-
-        document.querySelectorAll('.furniture-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const furniture = btn.dataset.furniture;
-                state.furniture[furniture] = !state.furniture[furniture];
-                btn.classList.toggle('active', state.furniture[furniture]);
-                draw();
-            });
-        });
-
-        const timeSlider = document.getElementById('timeSlider');
-        const timeLabel = document.getElementById('timeLabel');
-        timeSlider.addEventListener('input', () => {
-            state.time = parseFloat(timeSlider.value);
-            timeLabel.textContent = formatTime(state.time);
-            draw();
-        });
-
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            state.wallColor = '#f5f5f5';
-            state.floorColor = '#8b7355';
-            state.lights = { main: false, bedside: false, desk: false, ambient: false };
-            state.furniture = { bed: true, desk: true, chair: true, plant: false, lamp: false, rug: false };
-            state.time = 12;
-            
-            // Update UI
-            document.querySelectorAll('.light-switch').forEach(sw => sw.classList.remove('on'));
-            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
-            document.querySelector('#wallColors .color-btn').classList.add('selected');
-            document.querySelector('#floorColors .color-btn').classList.add('selected');
-            document.querySelectorAll('.furniture-btn').forEach(btn => {
-                btn.classList.toggle('active', state.furniture[btn.dataset.furniture]);
-            });
-            timeSlider.value = 12;
-            timeLabel.textContent = '12:00 PM';
-            
-            draw();
-        });
-
-        document.getElementById('saveBtn').addEventListener('click', () => {
-            const data = JSON.stringify(state, null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'room-design.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            // Visual feedback
-            const btn = document.getElementById('saveBtn');
-            const originalText = btn.textContent;
-            btn.textContent = 'Saved!';
-            setTimeout(() => btn.textContent = originalText, 1500);
-        });
-
-        // Main draw function
-        function draw() {
-            if (state.view === 'interior') {
-                drawInterior();
-            } else {
-                drawExterior();
-            }
-        }
-
-        // Initial draw
-        draw();
-    </script>
+<div class="container">
+<div class="header">
+<h1>NEON ROOM DESIGNER</h1>
+<div class="view-toggle">
+<button class="view-btn active" data-view="interior">Interior</button>
+<button class="view-btn" data-view="exterior">Exterior</button>
+</div>
+</div>
+<div class="main">
+<div class="room-display">
+<canvas id="roomCanvas" class="room-canvas"></canvas>
+</div>
+<div class="controls">
+<div class="control-section">
+<h3>Light Systems</h3>
+<div class="switch-grid">
+<div class="light-switch on" data-light="main"><div class="switch-icon">⚡</div><div>Neon Main</div></div>
+<div class="light-switch on" data-light="accent"><div class="switch-icon">🔮</div><div>Hologram</div></div>
+<div class="light-switch" data-light="floor"><div class="switch-icon">⬡</div><div>Floor Grid</div></div>
+<div class="light-switch" data-light="ambient"><div class="switch-icon">✨</div><div>Ambient</div></div>
+</div>
+</div>
+<div class="control-section">
+<h3>Wall Matrix</h3>
+<div class="color-grid" id="wallColors">
+<div class="color-btn selected" style="background:#0a0a1a" data-color="#0a0a1a"></div>
+<div class="color-btn" style="background:#1a0a2e" data-color="#1a0a2e"></div>
+<div class="color-btn" style="background:#0a1a3e" data-color="#0a1a3e"></div>
+<div class="color-btn" style="background:#1a1a2e" data-color="#1a1a2e"></div>
+<div class="color-btn" style="background:#2d1a3e" data-color="#2d1a3e"></div>
+<div class="color-btn" style="background:#1a3e2e" data-color="#1a3e2e"></div>
+<div class="color-btn" style="background:#0d1a2e" data-color="#0d1a2e"></div>
+<div class="color-btn" style="background:#1a1a1a" data-color="#1a1a1a"></div>
+</div>
+</div>
+<div class="control-section">
+<h3>Floor Grid</h3>
+<div class="color-grid" id="floorColors">
+<div class="color-btn selected" style="background:#0a0a15" data-color="#0a0a15"></div>
+<div class="color-btn" style="background:#1a1a25" data-color="#1a1a25"></div>
+<div class="color-btn" style="background:#0a1520" data-color="#0a1520"></div>
+<div class="color-btn" style="background:#150a20" data-color="#150a20"></div>
+<div class="color-btn" style="background:#0d0d1a" data-color="#0d0d1a"></div>
+<div class="color-btn" style="background:#1a0d15" data-color="#1a0d15"></div>
+<div class="color-btn" style="background:#0d1a15" data-color="#0d1a15"></div>
+<div class="color-btn" style="background:#15151a" data-color="#15151a"></div>
+</div>
+</div>
+<div class="control-section">
+<h3>Tech Modules</h3>
+<div class="furniture-grid">
+<button class="furniture-btn active" data-furniture="hologram">Holo Desk</button>
+<button class="furniture-btn active" data-furniture="robot">Robot</button>
+<button class="furniture-btn" data-furniture="vacuum">Vacuum</button>
+<button class="furniture-btn" data-furniture="screen">Screen</button>
+<button class="furniture-btn" data-furniture="console">Console</button>
+<button class="furniture-btn" data-furniture="drone">Drone</button>
+</div>
+</div>
+<div class="control-section">
+<h3>Time Cycle</h3>
+<div class="time-slider">
+<input type="range" id="timeSlider" min="0" max="24" value="20" step="0.5">
+<div class="time-label" id="timeLabel">8:00 PM</div>
+</div>
+</div>
+<div class="action-btns">
+<button class="action-btn secondary" id="resetBtn">Reset</button>
+<button class="action-btn" id="saveBtn">Save</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+const canvas=document.getElementById('roomCanvas');
+const ctx=canvas.getContext('2d');
+canvas.width=500;canvas.height=430;
+const state={view:'interior',lights:{main:true,accent:true,floor:false,ambient:false},wallColor:'#0a0a1a',floorColor:'#0a0a15',furniture:{hologram:true,robot:true,vacuum:false,screen:false,console:false,drone:false},time:20};
+function drawInterior(){ctx.fillStyle='#08080c';ctx.fillRect(0,0,canvas.width,canvas.height);const tb=getTimeBrightness();const li=calcLight(tb);const wg=ctx.createLinearGradient(0,0,0,350);const wc=hexToRgb(state.wallColor);wg.addColorStop(0,`rgb(${wc.r*li},${wc.g*li},${wc.b*li})`);wg.addColorStop(1,`rgb(${wc.r*li*0.5},${wc.g*li*0.5},${wc.b*li*0.5})`);ctx.fillStyle=wg;ctx.fillRect(50,50,400,300);const fg=ctx.createLinearGradient(0,350,0,430);const fc=hexToRgb(state.floorColor);fg.addColorStop(0,`rgb(${fc.r*li},${fc.g*li},${fc.b*li})`);fg.addColorStop(1,`rgb(${fc.r*li*0.4},${fc.g*li*0.4},${fc.b*li*0.4})`);ctx.fillStyle=fg;ctx.fillRect(50,350,400,80);if(state.lights.floor){ctx.strokeStyle=`rgba(0,212,255,${0.3*li})`;ctx.lineWidth=1;for(let i=0;i<10;i++){ctx.beginPath();ctx.moveTo(50+i*40,350);ctx.lineTo(30+i*38,430);ctx.stroke();}for(let i=0;i<6;i++){ctx.beginPath();ctx.moveTo(50,350+i*13);ctx.lineTo(450,350+i*13);ctx.stroke();}}drawWindow(120,70,180,100,tb);drawDoor(380,150,60,200);if(state.furniture.hologram)drawHoloDesk(80,220,li);if(state.furniture.robot)drawRobot(300,200,li);if(state.furniture.vacuum)drawVacuum(150,360,li);if(state.furniture.screen)drawScreen(400,80,li);if(state.furniture.console)drawConsole(60,320,li);if(state.furniture.drone)drawDrone(200,100,li);drawLightEffects(li);}
+function drawExterior(){ctx.fillStyle='#08080c';ctx.fillRect(0,0,canvas.width,canvas.height);const tb=getTimeBrightness();const sg=ctx.createLinearGradient(0,0,0,300);if(state.time>=6&&state.time<18){sg.addColorStop(0,'#1a3a5a');sg.addColorStop(1,'#2a5a8a');}else if(state.time>=18&&state.time<20){sg.addColorStop(0,'#2a1a4a');sg.addColorStop(0.5,'#4a2a6a');sg.addColorStop(1,'#1a3a5a');}else{sg.addColorStop(0,'#0a0a1a');sg.addColorStop(1,'#1a0a2e');}ctx.fillStyle=sg;ctx.fillRect(0,0,canvas.width,300);if(state.time>=6&&state.time<18){ctx.fillStyle='#00d4ff';ctx.beginPath();ctx.arc(420,60,25,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(0,212,255,0.3)';ctx.beginPath();ctx.arc(420,60,40,0,Math.PI*2);ctx.fill();}else{ctx.fillStyle='#c0c0d0';ctx.beginPath();ctx.arc(420,60,20,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1a1a2e';ctx.beginPath();ctx.arc(415,55,15,0,Math.PI*2);ctx.fill();}ctx.fillStyle='#0a1520';ctx.fillRect(0,300,canvas.width,130);drawFuturisticHouse(150,180,200,150,tb);drawNeonTree(50,250,tb);drawNeonTree(420,230,tb);ctx.fillStyle='rgba(0,212,255,0.2)';ctx.beginPath();ctx.moveTo(220,330);ctx.lineTo(280,330);ctx.lineTo(300,430);ctx.lineTo(200,430);ctx.closePath();ctx.fill();}
+function drawWindow(x,y,w,h,tb){ctx.fillStyle='#1a1a2a';ctx.fillRect(x-5,y-5,w+10,h+10);const gg=ctx.createLinearGradient(x,y,x,y+h);if(state.time>=6&&state.time<18){gg.addColorStop(0,`rgba(0,150,200,${0.2+tb*0.3})`);gg.addColorStop(1,`rgba(0,100,150,${0.2+tb*0.3})`);}else{gg.addColorStop(0,`rgba(0,50,80,${0.3+tb*0.2})`);gg.addColorStop(1,`rgba(0,30,50,${0.3+tb*0.2})`);}ctx.fillStyle=gg;ctx.fillRect(x,y,w,h);ctx.strokeStyle='#00d4ff';ctx.lineWidth=2;ctx.strokeRect(x,y,w,h);ctx.beginPath();ctx.moveTo(x+w/2,y);ctx.lineTo(x+w/2,y+h);ctx.stroke();ctx.beginPath();ctx.moveTo(x,y+h/2);ctx.lineTo(x+w,y+h/2);ctx.stroke();ctx.strokeStyle='rgba(0,212,255,0.3)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+10,y+h-10);ctx.lineTo(x+w/2-10,y+h/2+10);ctx.stroke();}
+function drawDoor(x,y,w,h){ctx.fillStyle='#1a1a2a';ctx.fillRect(x-3,y-3,w+6,h+6);const dg=ctx.createLinearGradient(x,y,x+w,y+h);dg.addColorStop(0,'#2a2a3a');dg.addColorStop(1,'#1a1a2a');ctx.fillStyle=dg;ctx.fillRect(x,y,w,h);ctx.strokeStyle='#00d4ff';ctx.lineWidth=2;ctx.strokeRect(x,y,w,h);ctx.fillStyle='#00d4ff';ctx.beginPath();ctx.arc(x+w-12,y+h/2,3,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(0,212,255,0.3)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+10,y+10);ctx.lineTo(x+w-10,y+10);ctx.moveTo(x+10,y+h-10);ctx.lineTo(x+w-10,y+h-10);ctx.stroke();}
+function drawHoloDesk(x,y,li){ctx.fillStyle=`rgba(0,100,150,${0.5*li})`;ctx.fillRect(x,y,100,10);ctx.fillStyle=`rgba(0,150,200,${0.3*li})`;ctx.fillRect(x+5,y+10,8,60);ctx.fillRect(x+87,y+10,8,60);ctx.fillStyle=`rgba(0,212,255,${0.6*li})`;ctx.fillRect(x+30,y-40,40,40);ctx.strokeStyle='#00d4ff';ctx.lineWidth=1;ctx.strokeRect(x+30,y-40,40,40);ctx.fillStyle=`rgba(255,0,255,${0.4*li})`;ctx.beginPath();ctx.moveTo(x+35,y-35);ctx.lineTo(x+65,y-35);ctx.lineTo(x+50,y-20);ctx.closePath();ctx.fill();if(state.lights.accent){ctx.fillStyle='rgba(0,212,255,0.2)';ctx.beginPath();ctx.arc(x+50,y-20,50,0,Math.PI*2);ctx.fill();}}
+function drawRobot(x,y,li){ctx.fillStyle=`rgba(180,180,190,${0.8*li})`;ctx.fillRect(x+20,y,30,60);ctx.fillStyle=`rgba(160,160,170,${0.9*li})`;ctx.beginPath();ctx.arc(x+35,y-15,18,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ff0040';ctx.beginPath();ctx.arc(x+35,y-15,8,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,0,64,0.5)';ctx.beginPath();ctx.arc(x+35,y-15,12,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(200,50,50,${0.6*li})`;ctx.fillRect(x+25,y+15,8,20);ctx.fillRect(x+40,y+15,8,20);ctx.fillStyle=`rgba(120,120,130,${0.7*li})`;ctx.fillRect(x+5,y+20,15,30);ctx.fillRect(x+55,y+20,15,30);if(state.lights.accent){ctx.fillStyle='rgba(255,0,64,0.3)';ctx.beginPath();ctx.arc(x+35,y+30,40,0,Math.PI*2);ctx.fill();}}
+function drawVacuum(x,y,li){ctx.fillStyle=`rgba(60,60,70,${0.8*li})`;ctx.beginPath();ctx.arc(x+20,y+15,18,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(0,212,255,${0.6*li})`;ctx.beginPath();ctx.arc(x+20,y+10,5,0,Math.PI*2);ctx.fill();ctx.strokeStyle=`rgba(0,212,255,${0.4*li})`;ctx.lineWidth=1;ctx.beginPath();ctx.arc(x+20,y+15,15,0,Math.PI*2);ctx.stroke();}
+function drawScreen(x,y,li){ctx.fillStyle=`rgba(10,10,20,${0.9*li})`;ctx.fillRect(x,y,60,40);ctx.fillStyle=`rgba(0,212,255,${0.4*li})`;ctx.fillRect(x+5,y+5,50,30);ctx.strokeStyle='#00d4ff';ctx.lineWidth=2;ctx.strokeRect(x,y,60,40);ctx.fillStyle='#00d4ff';ctx.font='8px Arial';ctx.fillText('SYSTEM',x+15,y+20);ctx.fillText('ONLINE',x+18,y+30);}
+function drawConsole(x,y,li){ctx.fillStyle=`rgba(40,40,50,${0.8*li})`;ctx.fillRect(x,y,40,25);ctx.fillStyle=`rgba(0,212,255,${0.5*li})`;for(let i=0;i<3;i++)for(let j=0;j<4;j++)ctx.fillRect(x+5+j*8,y+5+i*5,4,3);}
+function drawDrone(x,y,li){ctx.fillStyle=`rgba(80,80,90,${0.7*li})`;ctx.fillRect(x,y,30,8);ctx.fillStyle=`rgba(0,212,255,${0.8*li})`;ctx.beginPath();ctx.arc(x+15,y+4,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(0,212,255,0.3)';ctx.beginPath();ctx.arc(x+15,y+4,15,0,Math.PI*2);ctx.fill();}
+function drawFuturisticHouse(x,y,w,h,tb){const hc=hexToRgb(state.wallColor);ctx.fillStyle=`rgb(${hc.r*tb},${hc.g*tb},${hc.b*tb})`;ctx.fillRect(x,y,w,h);ctx.fillStyle='#1a1a2a';ctx.beginPath();ctx.moveTo(x-20,y);ctx.lineTo(x+w/2,y-50);ctx.lineTo(x+w+20,y);ctx.closePath();ctx.fill();ctx.strokeStyle='#00d4ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-20,y);ctx.lineTo(x+w/2,y-50);ctx.lineTo(x+w+20,y);ctx.stroke();ctx.fillStyle='#0a0a15';ctx.fillRect(x+w/2-25,y+h-60,50,60);ctx.strokeStyle='#00d4ff';ctx.lineWidth=2;ctx.strokeRect(x+w/2-25,y+h-60,50,60);ctx.fillStyle='#00d4ff';ctx.beginPath();ctx.arc(x+w/2+15,y+h-30,3,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(0,100,150,${0.3+tb*0.3})`;ctx.fillRect(x+30,y+40,50,40);ctx.fillRect(x+w-80,y+40,50,40);ctx.strokeStyle='#00d4ff';ctx.lineWidth=2;ctx.strokeRect(x+30,y+40,50,40);ctx.strokeRect(x+w-80,y+40,50,40);if(state.lights.main||state.lights.accent){ctx.fillStyle='rgba(0,212,255,0.3)';ctx.beginPath();ctx.arc(x+w/2,y+100,60,0,Math.PI*2);ctx.fill();}}
+function drawNeonTree(x,y,tb){ctx.fillStyle=`rgba(40,40,50,${0.8*tb})`;ctx.fillRect(x-8,y,16,50);ctx.fillStyle=`rgba(0,212,255,${0.4*tb})`;ctx.beginPath();ctx.arc(x,y-20,35,0,Math.PI*2);ctx.fill();ctx.strokeStyle=`rgba(0,212,255,${0.6*tb})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y-20,35,0,Math.PI*2);ctx.stroke();ctx.fillStyle=`rgba(255,0,255,${0.3*tb})`;ctx.beginPath();ctx.arc(x-15,y-10,15,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+15,y-30,12,0,Math.PI*2);ctx.fill();}
+function drawLightEffects(li){if(state.lights.main){ctx.fillStyle='rgba(0,212,255,0.15)';ctx.beginPath();ctx.arc(250,100,120,0,Math.PI*2);ctx.fill();}if(state.lights.accent){ctx.fillStyle='rgba(255,0,255,0.1)';ctx.beginPath();ctx.arc(130,220,80,0,Math.PI*2);ctx.fill();}if(state.lights.ambient){ctx.fillStyle='rgba(0,212,255,0.08)';ctx.fillRect(50,50,400,300);}}
+function getTimeBrightness(){if(state.time>=6&&state.time<18){const md=12;const dfm=Math.abs(state.time-md);return 0.5+(1-dfm/6)*0.4;}else if(state.time>=18&&state.time<20){return 0.4-(state.time-18)*0.15;}else{return 0.2;}}
+function calcLight(nb){let al=0;if(state.lights.main)al+=0.4;if(state.lights.accent)al+=0.25;if(state.lights.floor)al+=0.15;if(state.lights.ambient)al+=0.1;return Math.min(1,nb+al);}
+function hexToRgb(h){const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);return r?{r:parseInt(r[1],16),g:parseInt(r[2],16),b:parseInt(r[3],16)}:{r:10,g:10,b:26};}
+function formatTime(t){const h=Math.floor(t);const m=(t%1)*60;const ap=h>=12?'PM':'AM';const dh=h%12||12;const dm=m===0?'00':'30';return dh+':'+dm+ap;}
+function draw(){state.view==='interior'?drawInterior():drawExterior();}
+document.querySelectorAll('.view-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.view-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.view=b.dataset.view;draw();}));
+document.querySelectorAll('.light
+document.querySelectorAll('.light-switch').forEach(s=>s.addEventListener('click',()=>{const l=s.dataset.light;state.lights[l]=!state.lights[l];s.classList.toggle('on',state.lights[l]);draw();}));
+document.querySelectorAll('#wallColors .color-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#wallColors .color-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');state.wallColor=b.dataset.color;draw();}));
+document.querySelectorAll('#floorColors .color-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#floorColors .color-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');state.floorColor=b.dataset.color;draw();}));
+document.querySelectorAll('.furniture-btn').forEach(b=>b.addEventListener('click',()=>{const f=b.dataset.furniture;state.furniture[f]=!state.furniture[f];b.classList.toggle('active',state.furniture[f]);draw();}));
+const ts=document.getElementById('timeSlider');const tl=document.getElementById('timeLabel');
+ts.addEventListener('input',()=>{state.time=parseFloat(ts.value);tl.textContent=formatTime(state.time);draw();});
+document.getElementById('resetBtn').addEventListener('click',()=>{state.wallColor='#0a0a1a';state.floorColor='#0a0a15';state.lights={main:true,accent:true,floor:false,ambient:false};state.furniture={hologram:true,robot:true,vacuum:false,screen:false,console:false,drone:false};state.time=20;document.querySelectorAll('.light-switch').forEach(s=>s.classList.remove('on'));document.querySelector('[data-light="main"]').classList.add('on');document.querySelector('[data-light="accent"]').classList.add('on');document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('selected'));document.querySelector('#wallColors .color-btn').classList.add('selected');document.querySelector('#floorColors .color-btn').classList.add('selected');document.querySelectorAll('.furniture-btn').forEach(b=>b.classList.toggle('active',state.furniture[b.dataset.furniture]));ts.value=20;tl.textContent='8:00 PM';draw();});
+document.getElementById('saveBtn').addEventListener('click',()=>{const d=JSON.stringify(state,null,2);const b=new Blob([d],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='neon-room.json';a.click();URL.revokeObjectURL(u);const btn=document.getElementById('saveBtn');btn.textContent='Saved!';setTimeout(()=>btn.textContent='Save',1500);});
+draw();
+</script>
 </body>
 </html>
